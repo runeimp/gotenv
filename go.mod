@@ -1,4 +1,4 @@
-module github.com/subosito/gotenv
+module github.com/runeimp/gotenv
 
 go 1.13
 

@@ -21,6 +21,8 @@ const (
 // Env holds key/value pair of valid environment variable
 type Env map[string]string
 
+var envBackupData map[string]string
+
 /*
 Load is a function to load a file or multiple files and then export the valid variables into environment variables if they do not exist.
 When it's called with no argument, it will load `.env` file on the current path and set the environment variables.
@@ -58,6 +60,17 @@ OverApply is a function to load an io Reader then export and override the valid 
 */
 func OverApply(r io.Reader) error {
 	return parset(r, true)
+}
+
+func init() {
+	envBackupData = make(map[string]string)
+
+	for _, envar := range os.Environ() {
+		kv := strings.Split(envar, "=")
+		k := kv[0]
+		v := kv[1]
+		envBackupData[k] = v
+	}
 }
 
 func loadenv(override bool, filenames ...string) error {
@@ -112,6 +125,14 @@ func setenv(key, val string, override bool) {
 func Parse(r io.Reader) Env {
 	env, _ := StrictParse(r)
 	return env
+}
+
+// Reset will restore the original environment from launch
+func Reset() {
+	os.Clearenv()
+	for k, v := range envBackupData {
+		os.Setenv(k, v)
+	}
 }
 
 // StrictParse is a function to parse line by line any io.Reader supplied and returns the valid Env key/value pair of valid variables.
